@@ -1,4 +1,5 @@
 import numpy as np
+import pygame
 
 # Definir el ambiente como una matriz cuadrada
 # 0 representa un espacio vacío, 1 representa un obstáculo, 'M' representa la meta, etc.
@@ -248,7 +249,10 @@ def td_zero(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000): #Demora
                 possible_actions.append(state_index[(x, y + 1)])
 
             next_state = np.random.choice(possible_actions)  # Escoger un próximo estado al azar
-
+            print(next_state)
+            print(possible_actions)
+            print(state)
+            move_robot(next_state)
             # Obtener la recompensa del nuevo estado
             if mapa_np[index_state[next_state]] == 'M':  # Si llegamos a la meta
                 reward = 10
@@ -299,13 +303,106 @@ def td_zero(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000): #Demora
 
     return V, optimal_policy, optimal_path
 
+#Parte 2: Interfaz Grafica --------------------------------------------------------------
+pygame.init()
+
+# Dimensiones de la ventana
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
+
+# Tamaño de las celdas de la matriz
+CELL_SIZE = 50
+
+# Crear la ventana
+screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+
+# Tamaño deseado para las texturas
+TEXTURE_SIZE = (CELL_SIZE, CELL_SIZE)
+
+# Cargar y escalar las texturas
+texture_pasto = pygame.image.load('textures/grass.jpg').convert_alpha()
+texture_pasto = pygame.transform.scale(texture_pasto, TEXTURE_SIZE)
+
+texture_pared = pygame.image.load('textures/arbol.png').convert_alpha()
+texture_pared = pygame.transform.scale(texture_pared, TEXTURE_SIZE)
+
+texture_muralla = pygame.image.load('textures/rock.png').convert_alpha()
+texture_muralla = pygame.transform.scale(texture_muralla, TEXTURE_SIZE)
+
+texture_meta = pygame.image.load('textures/meta.png').convert_alpha()
+texture_meta = pygame.transform.scale(texture_meta, TEXTURE_SIZE)
+
+texture_robot = pygame.image.load('textures/robot.png').convert_alpha()
+texture_robot = pygame.transform.scale(texture_robot, TEXTURE_SIZE)
+
+# Función para dibujar la matriz con texturas
+def draw_matrix(screen, matrix):
+    for i in range(len(matrix)):
+        for j in range(len(matrix[i])):
+            cell_rect = pygame.Rect(j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            # Dibujar la textura de pasto primero
+            screen.blit(texture_pasto, cell_rect)
+            
+            # Sobrepasar la textura de pared si corresponde
+            if matrix[i][j] == 1:
+                screen.blit(texture_pared, cell_rect)
+            
+            # Sobrepasar la textura de muralla si corresponde
+            elif matrix[i][j] == 2:
+                screen.blit(texture_muralla, cell_rect)
+            
+            elif matrix[i][j] == 3:
+                screen.blit(texture_meta, cell_rect)
+
+def move_robot(future_position):
+    x, y = future_position
+
+    draw_matrix(screen, matrix)
+    robot_celda = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+    screen.blit(texture_robot, robot_celda)
+    pygame.display.flip()
+    pygame.time.wait(100)
+    
+matrix = np.array([[1, 1, 1, 1, 0, 1, 1, 1, 1],
+                   [1, 1, 1, 1, 0, 1, 1, 1, 1],
+                   [1, 1, 1, 1, 0, 2, 0, 0, 0],
+                   [0, 0, 0, 0, 0, 1, 0, 1, 1],
+                   [0, 1, 2, 1, 0, 1, 0, 1, 1],
+                   [0, 3, 0, 1, 0, 2, 0, 1, 1],
+                   [0, 1, 0, 1, 0, 1, 0, 1, 1],
+                   [0, 2, 0, 0, 0, 1, 0, 1, 1],
+                   [1, 1, 1, 1, 0, 0, 0, 1, 1],
+                   [1, 1, 1, 1, 0, 1, 0, 1, 1],
+                   [1, 1, 1, 1, 0, 1, 0, 1, 1],
+                   [1, 1, 1, 1, 0, 2, 0, 1, 1]                 
+])
+
+screen.fill((255, 255, 255))  # Limpia la pantalla
+draw_matrix(screen, matrix)
+
 # Ejemplo de uso
-V, optimal_policy3, optimal_path3 = td_zero(mapa)
+#V, optimal_policy3, optimal_path3 = td_zero(mapa)
 
 # Imprimir los valores de estado y la política óptima
-print("Valores de Estado (V):")
-print(V)
-print("\nPolítica Óptima:")
-print(optimal_policy3)
-print("\nRuta Óptima:")
-print(optimal_path3)
+#print("Valores de Estado (V):")
+#print(V)
+#print("\nPolítica Óptima:")
+#print(optimal_policy3)
+#print("\nRuta Óptima:")
+#print(optimal_path3)
+i=0
+while True:
+    move_robot([1,i])
+    i=i+1
+    if i ==7:
+        i=0
+    #Eventos de pygame
+    for event in pygame.event.get():
+
+        #Evento de cierre
+        if event.type == pygame.QUIT:
+            pygame.quit()
+
+        #Eventos de botones
+
+    pygame.display.flip()
