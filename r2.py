@@ -31,7 +31,6 @@ rows, cols = mapa_np.shape
 # Crear un diccionario para mapear las coordenadas (x, y) a un índice único de estado
 state_index = {}
 index_state = {}
-
 # Índice para representar cada estado
 idx = 0
 
@@ -47,7 +46,7 @@ for i in range(rows):
 num_states = len(state_index)
 num_actions = 4
 
-def q_learning(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000):
+def q_learning(alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000):
     # Inicialización de la matriz Q con valores arbitrarios
     Q = np.zeros((num_states, num_actions))
 
@@ -55,8 +54,10 @@ def q_learning(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000):
     def is_valid_move(x, y):
         return 0 <= x < rows and 0 <= y < cols and mapa_np[x, y] != 'X'
 
-    for _ in range(num_episodes):
+    for episodio in range(num_episodes):
         state = state_index[(1, 5)]  # Empezamos desde el estado inicial
+        if episodio % 50 ==0:
+            move_robot([1,5])
         done = False
 
         while not done:
@@ -83,6 +84,7 @@ def q_learning(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000):
             if mapa_np[index_state[next_state]] == 'M':  # Si llegamos a la meta
                 reward = 10
                 done = True
+                print("llego")
             elif mapa_np[index_state[next_state]] == 0:  # Si es una casilla vacía
                 reward = -0.1
             else:  # Si es un obstáculo
@@ -90,45 +92,18 @@ def q_learning(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000):
 
             # Actualizar la matriz Q
             Q[state, action] = Q[state, action] + alpha * (reward + gamma * np.max(Q[next_state]) - Q[state, action])
-
+            if episodio % 50 ==0:
+                move_robot(index_state[next_state])
             # Actualizar el estado actual
             state = next_state
 
-    # Derivar la política óptima a partir de la matriz Q entrenada
-    def get_optimal_policy():
-        state = state_index[(1, 5)]
-        path = [(1, 5)]
-        directions = []
-
-        while mapa_np[index_state[state]] != 'M':
-            action = np.argmax(Q[state])
-            x, y = index_state[state]
-            if action == 0 and is_valid_move(x - 1, y):
-                next_state = state_index[(x - 1, y)]
-                directions.append('N')
-            elif action == 1 and is_valid_move(x + 1, y):
-                next_state = state_index[(x + 1, y)]
-                directions.append('S')
-            elif action == 2 and is_valid_move(x, y - 1):
-                next_state = state_index[(x, y - 1)]
-                directions.append('O')
-            elif action == 3 and is_valid_move(x, y + 1):
-                next_state = state_index[(x, y + 1)]
-                directions.append('E')
-            else:
-                next_state = state
-            path.append(index_state[next_state])
-            state = next_state
-
-        return path, directions
-
-    return get_optimal_policy()
+    return 
 
 # Llamar a la función q_learning y obtener la política óptima
-optimal_path, optimal_directions = q_learning(mapa)
+#optimal_path, optimal_directions = q_learning(mapa)
 
-print("Camino óptimo:", optimal_path)
-print("Direcciones óptimas:", optimal_directions)
+#print("Camino óptimo:", optimal_path)
+#print("Direcciones óptimas:", optimal_directions)
 
 def sarsa(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000):
     # Inicialización de la matriz Q con valores arbitrarios
@@ -353,10 +328,10 @@ def draw_matrix(screen, matrix):
                 screen.blit(texture_meta, cell_rect)
 
 def move_robot(future_position):
-    x, y = future_position
-
+    #x, y = future_position
+    y, x = future_position
     draw_matrix(screen, matrix)
-    robot_celda = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+    robot_celda = pygame.Rect((x-1) * CELL_SIZE, (y-1) * CELL_SIZE, CELL_SIZE, CELL_SIZE)
     screen.blit(texture_robot, robot_celda)
     pygame.display.flip()
     pygame.time.wait(100)
@@ -379,8 +354,8 @@ screen.fill((255, 255, 255))  # Limpia la pantalla
 draw_matrix(screen, matrix)
 
 # Ejemplo de uso
-V, optimal_policy3, optimal_path3 = td_zero(mapa)
-
+#V, optimal_policy3, optimal_path3 = td_zero(mapa)
+q_learning()
 # Imprimir los valores de estado y la política óptima
 #print("Valores de Estado (V):")
 #print(V)
