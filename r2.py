@@ -249,14 +249,12 @@ def td_zero(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000): #Demora
                 possible_actions.append(state_index[(x, y + 1)])
 
             next_state = np.random.choice(possible_actions)  # Escoger un próximo estado al azar
-            print(next_state)
-            print(possible_actions)
-            print(state)
-            move_robot(next_state)
+            move_robot(index_state[next_state])
             # Obtener la recompensa del nuevo estado
             if mapa_np[index_state[next_state]] == 'M':  # Si llegamos a la meta
                 reward = 10
                 done = True
+                print("llego")
             elif mapa_np[index_state[next_state]] == 0:  # Si es una casilla vacía
                 reward = -0.1
             else:  # Si es un obstáculo
@@ -363,10 +361,10 @@ def move_robot(future_position):
     pygame.display.flip()
     pygame.time.wait(100)
     
-matrix = np.array([[1, 1, 1, 1, 0, 1, 1, 1, 1],
-                   [1, 1, 1, 1, 0, 1, 1, 1, 1],
-                   [1, 1, 1, 1, 0, 2, 0, 0, 0],
-                   [0, 0, 0, 0, 0, 1, 0, 1, 1],
+matrix = np.array([[1, 1, 1, 1, 0, 1, 1, 1, 1], #0: camino libre
+                   [1, 1, 1, 1, 0, 1, 1, 1, 1], #1: pared
+                   [1, 1, 1, 1, 0, 2, 0, 0, 0], #2: muralla
+                   [0, 0, 0, 0, 0, 1, 0, 1, 1], #3: meta
                    [0, 1, 2, 1, 0, 1, 0, 1, 1],
                    [0, 3, 0, 1, 0, 2, 0, 1, 1],
                    [0, 1, 0, 1, 0, 1, 0, 1, 1],
@@ -381,7 +379,7 @@ screen.fill((255, 255, 255))  # Limpia la pantalla
 draw_matrix(screen, matrix)
 
 # Ejemplo de uso
-#V, optimal_policy3, optimal_path3 = td_zero(mapa)
+V, optimal_policy3, optimal_path3 = td_zero(mapa)
 
 # Imprimir los valores de estado y la política óptima
 #print("Valores de Estado (V):")
@@ -390,12 +388,8 @@ draw_matrix(screen, matrix)
 #print(optimal_policy3)
 #print("\nRuta Óptima:")
 #print(optimal_path3)
-i=0
+
 while True:
-    move_robot([1,i])
-    i=i+1
-    if i ==7:
-        i=0
     #Eventos de pygame
     for event in pygame.event.get():
 
