@@ -175,7 +175,7 @@ def td_zero(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000): #Demora
     def is_valid_move(x, y):
         return 0 <= x < rows and 0 <= y < cols and mapa_np[x, y] != 'X'
 
-    for _ in range(num_episodes):
+    for episodio in range(num_episodes):
         state = state_index[(1, 5)]  # Empezamos desde el estado inicial <- Actualizar aleatoriamente esta wea cuando se implemente con pygame
         done = False
 
@@ -183,6 +183,7 @@ def td_zero(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000): #Demora
             # Mapear la acción a un movimiento (arriba, abajo, izquierda, derecha)
             x, y = index_state[state]
             possible_actions = []
+
             if is_valid_move(x - 1, y):  # Arriba
                 possible_actions.append(state_index[(x - 1, y)])
             if is_valid_move(x + 1, y):  # Abajo
@@ -191,7 +192,7 @@ def td_zero(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000): #Demora
                 possible_actions.append(state_index[(x, y - 1)])
             if is_valid_move(x, y + 1):  # Derecha
                 possible_actions.append(state_index[(x, y + 1)])
-
+            # Obtener la recompensa del nuevo estado
             next_state = np.random.choice(possible_actions)  # Escoger un próximo estado al azar
             move_robot(index_state[next_state])
             # Obtener la recompensa del nuevo estado
@@ -206,44 +207,9 @@ def td_zero(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000): #Demora
 
             # Actualizar el valor del estado actual usando la fórmula TD(0)
             V[state] = V[state] + alpha * (reward + gamma * V[next_state] - V[state])
-
             # Actualizar el estado actual
             state = next_state
-    # Derivar la política óptima a partir de los valores de estado
-    def get_optimal_policy():
-        state = state_index[(1, 5)]
-        path = [(1, 5)]
-        directions = []
-
-        while mapa_np[index_state[state]] != 'M':
-            x, y = index_state[state]
-            best_value = float('-inf')
-            best_action = None
-            for dx, dy, action in [(-1, 0, 'N'), (1, 0, 'S'), (0, -1, 'O'), (0, 1, 'E')]:
-                if is_valid_move(x + dx, y + dy):
-                    next_state = state_index[(x + dx, y + dy)]
-                    if V[next_state] > best_value:
-                        best_value = V[next_state]
-                        best_action = action
-            directions.append(best_action)
-            x, y = index_state[state]
-            if best_action == 'N':
-                state = state_index[(x - 1, y)]
-            elif best_action == 'S':
-                state = state_index[(x + 1, y)]
-            elif best_action == 'O':
-                state = state_index[(x, y - 1)]
-            elif best_action == 'E':
-                state = state_index[(x, y + 1)]
-            path.append(index_state[state])
-            path.append(index_state[state])
-
-        return directions, path
-
-    # Obtener la política óptima
-    optimal_policy, optimal_path = get_optimal_policy()
-
-    return V, optimal_policy, optimal_path
+    return V
 
 #Parte 2: Interfaz Grafica --------------------------------------------------------------
 pygame.init()
@@ -324,6 +290,7 @@ draw_matrix(screen, matrix)
 
 # Ejemplo de uso
 #V, optimal_policy3, optimal_path3 = td_zero(mapa)
+td_zero(mapa)
 q_learning()
 
 Q = sarsa()
