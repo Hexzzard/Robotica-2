@@ -105,7 +105,7 @@ def q_learning(alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000):
 #print("Camino óptimo:", optimal_path)
 #print("Direcciones óptimas:", optimal_directions)
 
-def sarsa(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000):
+def sarsa(alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000):
     # Inicialización de la matriz Q con valores arbitrarios
     Q = np.zeros((num_states, num_actions))
 
@@ -113,7 +113,7 @@ def sarsa(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000):
     def is_valid_move(x, y):
         return 0 <= x < rows and 0 <= y < cols and mapa_np[x, y] != 'X'
 
-    for _ in range(num_episodes):
+    for episodio in range(num_episodes):
         state = state_index[(1, 5)]  # Empezamos desde el estado inicial
         done = False
 
@@ -141,6 +141,7 @@ def sarsa(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000):
             if mapa_np[index_state[next_state]] == 'M':  # Si llegamos a la meta
                 reward = 10
                 done = True
+                print("llego")
             elif mapa_np[index_state[next_state]] == 0:  # Si es una casilla vacía
                 reward = -0.1
             else:  # Si es un obstáculo
@@ -155,45 +156,13 @@ def sarsa(mapa, alpha=0.1, gamma=0.9, epsilon=0.1, num_episodes=5000):
             # Actualizar la matriz Q usando la fórmula de SARSA
             Q[state, action] = Q[state, action] + alpha * (reward + gamma * Q[next_state, next_action] - Q[state, action])
 
-            # Actualizar el estado y la acción actuales
+            if episodio % 50 ==0:
+                move_robot(index_state[next_state])
+            # Actualizar el estado actual
             state = next_state
             action = next_action
 
-    # Derivar la política óptima a partir de la matriz Q entrenada
-    def get_optimal_policy():
-        state = state_index[(1, 5)]
-        path = [(1, 5)]
-        directions = []
-
-        while mapa_np[index_state[state]] != 'M':
-            action = np.argmax(Q[state])
-            x, y = index_state[state]
-            if action == 0 and is_valid_move(x - 1, y):
-                next_state = state_index[(x - 1, y)]
-                directions.append('N')
-            elif action == 1 and is_valid_move(x + 1, y):
-                next_state = state_index[(x + 1, y)]
-                directions.append('S')
-            elif action == 2 and is_valid_move(x, y - 1):
-                next_state = state_index[(x, y - 1)]
-                directions.append('O')
-            elif action == 3 and is_valid_move(x, y + 1):
-                next_state = state_index[(x, y + 1)]
-                directions.append('E')
-            else:
-                next_state = state
-            path.append(index_state[next_state])
-            state = next_state
-
-        return path, directions
-
-    return get_optimal_policy()
-
-# Llamar a la función sarsa y obtener la política óptima
-optimal_path2, optimal_directions2 = sarsa(mapa)
-
-print("Camino óptimo:", optimal_path2)
-print("Direcciones óptimas:", optimal_directions2)
+    return Q
 
 
 
@@ -356,6 +325,11 @@ draw_matrix(screen, matrix)
 # Ejemplo de uso
 #V, optimal_policy3, optimal_path3 = td_zero(mapa)
 q_learning()
+
+Q = sarsa()
+
+print("Matriz Q actualizada:")
+print(Q)
 # Imprimir los valores de estado y la política óptima
 #print("Valores de Estado (V):")
 #print(V)
