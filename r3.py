@@ -45,6 +45,25 @@ def take_action(state, action, matrix, rewards):
     reward = rewards[matrix[next_state]]
     done = matrix[next_state] == 3
 
+    if random.uniform(0, 1) > success_prob:
+        next_state = state
+
+    return next_state, reward, done
+
+def take_action2(state, action, matrix, rewards):
+    row, col = state
+    if action == "N":
+        next_state = (row - 1, col) if row > 0 and matrix[row - 1, col] != 1 else state
+    elif action == "S":
+        next_state = (row + 1, col) if row < matrix.shape[0] - 1 and matrix[row + 1, col] != 1 else state
+    elif action == "E":
+        next_state = (row, col + 1) if col < matrix.shape[1] - 1 and matrix[row, col + 1] != 1 else state
+    elif action == "O":
+        next_state = (row, col - 1) if col > 0 and matrix[row, col - 1] != 1 else state
+
+    reward = rewards[matrix[next_state]]
+    done = matrix[next_state] == 3
+
     return next_state, reward, done
 
 # Algoritmo Q-Learning
@@ -115,12 +134,12 @@ def td_zero_visual(matrix, rewards, actions, alpha=0.7, gamma=0.9, epsilon=0.1, 
             else:
                 action_values = []
                 for a in actions:
-                    paction = take_action(state, a, matrix, rewards)[0]
+                    paction = take_action2(state, a, matrix, rewards)[0]
                     if paction[0] != state:
                         action_values.append([value_table[paction],a])
                 action = sorted(action_values, key=lambda x: x[0], reverse=True)[0][1]
 
-            next_state, reward, done = take_action(state, action, matrix, rewards)
+            next_state, reward, done = take_action2(state, action, matrix, rewards)
 
             # Evitar quedarse en el mismo lugar
             if next_state == previous_state:
@@ -188,23 +207,23 @@ def move_robot(future_position):
 
 # Entrenar los algoritmos sin visualización durante el entrenamiento
 print("Training Q-Learning...")
-#q_table = q_learning(matrix, rewards, actions)
+q_table = q_learning(matrix, rewards, actions)
 
 print("Training SARSA...")
-#sarsa_table = sarsa(matrix, rewards, actions)
+sarsa_table = sarsa(matrix, rewards, actions)
 
 print("Training TD(0)...")
 td_value_table = td_zero_visual(matrix, rewards, actions)  # Entrenamiento sin visualización
 
 # Imprimir las tablas finales
 print("Q-Table (Q-Learning):")
-#print(q_table)
+print(q_table)
 
 print("\nQ-Table (SARSA):")
-#print(sarsa_table)
+print(sarsa_table)
 
 print("\nValue Table (TD(0)):")
-#print(td_value_table)
+print(td_value_table)
 
 def extract_policy_from_q_table(q_table, actions):
     policy = np.zeros(matrix.shape, dtype=str)
@@ -228,21 +247,21 @@ def extract_policy_from_value_table(value_table, actions):
             elif matrix[row, col] == 3:
                 policy[row, col] = 'M'
             else:
-                action_values = [value_table[take_action((row, col), a, matrix, rewards)[0]] for a in actions]
+                action_values = [value_table[take_action2((row, col), a, matrix, rewards)[0]] for a in actions]
                 best_action = actions[np.argmax(action_values)]
                 policy[row, col] = best_action
     return policy
 
-#q_policy = extract_policy_from_q_table(q_table, actions)
-#sarsa_policy = extract_policy_from_q_table(sarsa_table, actions)
+q_policy = extract_policy_from_q_table(q_table, actions)
+sarsa_policy = extract_policy_from_q_table(sarsa_table, actions)
 td_policy = extract_policy_from_value_table(td_value_table, actions)
 
 # Imprimir políticas para verificar razonabilidad
 print("\nQ-Learning Policy:")
-#print(q_policy)
+print(q_policy)
 
 print("\nSARSA Policy:")
-#print(sarsa_policy)
+print(sarsa_policy)
 
 print("\nTD(0) Policy:")
 print(td_policy)
