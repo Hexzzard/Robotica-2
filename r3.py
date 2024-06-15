@@ -45,9 +45,6 @@ def take_action(state, action, matrix, rewards):
     reward = rewards[matrix[next_state]]
     done = matrix[next_state] == 3
 
-    if random.uniform(0, 1) > success_prob:
-        next_state = state
-
     return next_state, reward, done
 
 # Algoritmo Q-Learning
@@ -104,21 +101,24 @@ def sarsa(matrix, rewards, actions, alpha=0.1, gamma=0.9, epsilon=0.1, episodes=
     return q_table
 
 # Algoritmo TD(0) con visualización solo en el último episodio
-def td_zero_visual(matrix, rewards, actions, alpha=0.1, gamma=0.9, epsilon=0.1, episodes=1):
+def td_zero_visual(matrix, rewards, actions, alpha=0.7, gamma=0.9, epsilon=0.1, episodes=1000):
     value_table = np.zeros(matrix.shape)
     for episode in range(episodes):
         state = (random.randint(0, matrix.shape[0] - 1), random.randint(0, matrix.shape[1] - 1))
         while matrix[state] == 1 or matrix[state] == 3:
             state = (random.randint(0, matrix.shape[0] - 1), random.randint(0, matrix.shape[1] - 1))
-
         previous_state = None  # Para verificar si el robot se queda quieto
-
+        pdone = False
         for t in range(1000):  # Máximo de 1000 pasos por episodio
             if random.uniform(0, 1) < epsilon:
                 action = random.choice(actions)
             else:
-                action_values = [value_table[take_action(state, a, matrix, rewards)[0]] for a in actions]
-                action = actions[np.argmax(action_values)]
+                action_values = []
+                for a in actions:
+                    paction = take_action(state, a, matrix, rewards)[0]
+                    if paction[0] != state:
+                        action_values.append([value_table[paction],a])
+                action = sorted(action_values, key=lambda x: x[0], reverse=True)[0][1]
 
             next_state, reward, done = take_action(state, action, matrix, rewards)
 
@@ -130,12 +130,14 @@ def td_zero_visual(matrix, rewards, actions, alpha=0.1, gamma=0.9, epsilon=0.1, 
 
             if episode == episodes - 1:  # Solo mostrar la visualización en el último episodio
                 move_robot(next_state)  # Mover el robot visualmente
-
-            if done:
+            if pdone:
                 break
+            if done:
+                pdone = True
             previous_state = state
             state = next_state
 
+    print(np.around(value_table, decimals=2))
     return value_table
 
 # Parte 2: Interfaz Gráfica con Pygame
@@ -186,23 +188,23 @@ def move_robot(future_position):
 
 # Entrenar los algoritmos sin visualización durante el entrenamiento
 print("Training Q-Learning...")
-q_table = q_learning(matrix, rewards, actions)
+#q_table = q_learning(matrix, rewards, actions)
 
 print("Training SARSA...")
-sarsa_table = sarsa(matrix, rewards, actions)
+#sarsa_table = sarsa(matrix, rewards, actions)
 
 print("Training TD(0)...")
-td_value_table = td_zero_visual(matrix, rewards, actions, episodes=1000)  # Entrenamiento sin visualización
+td_value_table = td_zero_visual(matrix, rewards, actions)  # Entrenamiento sin visualización
 
 # Imprimir las tablas finales
 print("Q-Table (Q-Learning):")
-print(q_table)
+#print(q_table)
 
 print("\nQ-Table (SARSA):")
-print(sarsa_table)
+#print(sarsa_table)
 
 print("\nValue Table (TD(0)):")
-print(td_value_table)
+#print(td_value_table)
 
 def extract_policy_from_q_table(q_table, actions):
     policy = np.zeros(matrix.shape, dtype=str)
@@ -231,16 +233,16 @@ def extract_policy_from_value_table(value_table, actions):
                 policy[row, col] = best_action
     return policy
 
-q_policy = extract_policy_from_q_table(q_table, actions)
-sarsa_policy = extract_policy_from_q_table(sarsa_table, actions)
+#q_policy = extract_policy_from_q_table(q_table, actions)
+#sarsa_policy = extract_policy_from_q_table(sarsa_table, actions)
 td_policy = extract_policy_from_value_table(td_value_table, actions)
 
 # Imprimir políticas para verificar razonabilidad
 print("\nQ-Learning Policy:")
-print(q_policy)
+#print(q_policy)
 
 print("\nSARSA Policy:")
-print(sarsa_policy)
+#print(sarsa_policy)
 
 print("\nTD(0) Policy:")
 print(td_policy)
@@ -286,7 +288,7 @@ pygame.time.wait(2000)
 
 # Visualizar la exploración de TD(0)
 print("Visualizando TD(0)...")
-td_zero_visual(matrix, rewards, actions, episodes=1)
+td_zero_visual(matrix, rewards, actions)
 
 while True:
     for event in pygame.event.get():
