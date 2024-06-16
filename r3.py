@@ -2,6 +2,8 @@ import numpy as np
 import pygame
 import random
 
+#variables globales
+max_pasos = 100
 # Definición del mapa y recompensas
 matrix = np.array([
     [1, 1, 1, 1, 0, 1, 1, 1, 1], 
@@ -50,21 +52,18 @@ def take_action(state, action, matrix, rewards):
 
     return next_state, reward, done
 
-def take_action2(state, action, matrix, rewards):
+def mov_is_valid(state, action, matrix):
     row, col = state
     if action == "N":
-        next_state = (row - 1, col) if row > 0 and matrix[row - 1, col] != 1 else state
+        next_state = (row - 1, col) if row > 0 and matrix[row - 1, col] != 1 else False
     elif action == "S":
-        next_state = (row + 1, col) if row < matrix.shape[0] - 1 and matrix[row + 1, col] != 1 else state
+        next_state = (row + 1, col) if row < matrix.shape[0] - 1 and matrix[row + 1, col] != 1 else False
     elif action == "E":
-        next_state = (row, col + 1) if col < matrix.shape[1] - 1 and matrix[row, col + 1] != 1 else state
+        next_state = (row, col + 1) if col < matrix.shape[1] - 1 and matrix[row, col + 1] != 1 else False
     elif action == "O":
-        next_state = (row, col - 1) if col > 0 and matrix[row, col - 1] != 1 else state
+        next_state = (row, col - 1) if col > 0 and matrix[row, col - 1] != 1 else False
 
-    reward = rewards[matrix[next_state]]
-    done = matrix[next_state] == 3
-
-    return next_state, reward, done
+    return next_state
 
 # Algoritmo Q-Learning
 def q_learning(matrix, rewards, actions, alpha=0.1, gamma=0.9, epsilon=0.1, episodes=1000):
@@ -120,40 +119,42 @@ def sarsa(matrix, rewards, actions, alpha=0.1, gamma=0.9, epsilon=0.1, episodes=
     return q_table
 
 # Algoritmo TD(0) con visualización solo en el último episodio
-def td_zero_visual(matrix, rewards, actions, alpha=0.7, gamma=0.9, epsilon=0.1, episodes=1000):
-    value_table = np.zeros(matrix.shape)
-    for episode in range(episodes):
+def td_zero_visual(matrix, rewards, actions, alpha=0.1, gamma=0.9, epsilon=0.1, episodes=1000):
+    value_table = np.zeros(matrix.shape) #creamos la value table
+
+    for episode in range(episodes): #iteramos por el rango de episodios
+
+        #ubicar al robot
         state = (random.randint(0, matrix.shape[0] - 1), random.randint(0, matrix.shape[1] - 1))
         while matrix[state] == 1 or matrix[state] == 3:
             state = (random.randint(0, matrix.shape[0] - 1), random.randint(0, matrix.shape[1] - 1))
-        previous_state = None  # Para verificar si el robot se queda quieto
+
         pdone = False
-        for t in range(1000):  # Máximo de 1000 pasos por episodio
-            if random.uniform(0, 1) < epsilon:
-                action = random.choice(actions)
-            else:
-                action_values = []
-                for a in actions:
-                    paction = take_action2(state, a, matrix, rewards)[0]
-                    if paction[0] != state:
-                        action_values.append([value_table[paction],a])
+        for paso in range(max_pasos):
+            
+            if random.uniform(0, 1) < epsilon: #robot explora
+                action = random.choice(actions) 
+
+            else: #robot explota
+                action_values = [] 
+                for a in actions: #evaluara todos los posibles movimientos
+                    mov = mov_is_valid(state, a, matrix)
+                    if mov:
+                        action_values.append([value_table[mov],a])
+                #y se queda con el movimiento de mayor recompensa segun la value table
                 action = sorted(action_values, key=lambda x: x[0], reverse=True)[0][1]
 
-            next_state, reward, done = take_action2(state, action, matrix, rewards)
-
-            # Evitar quedarse en el mismo lugar
-            if next_state == previous_state:
-                continue
+            next_state, reward, done = take_action(state, action, matrix, rewards)
 
             value_table[state] += alpha * (reward + gamma * value_table[next_state] - value_table[state])
 
             if episode == episodes - 1:  # Solo mostrar la visualización en el último episodio
-                move_robot(next_state)  # Mover el robot visualmente
-            if pdone:
-                break
+                move_robot(next_state)  #mover el rbo
             if done:
                 pdone = True
-            previous_state = state
+
+            if pdone:
+                break
             state = next_state
 
     print(np.around(value_table, decimals=2))
@@ -247,7 +248,7 @@ def extract_policy_from_value_table(value_table, actions):
             elif matrix[row, col] == 3:
                 policy[row, col] = 'M'
             else:
-                action_values = [value_table[take_action2((row, col), a, matrix, rewards)[0]] for a in actions]
+                action_values = [value_table[take_action((row, col), a, matrix, rewards)[0]] for a in actions]
                 best_action = actions[np.argmax(action_values)]
                 policy[row, col] = best_action
     return policy
