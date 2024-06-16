@@ -105,7 +105,6 @@ def q_learning(matrix, rewards, actions, alpha=0.1, gamma=0.9, epsilon=0.1, epis
 #funcion del algoritmo SARSA
 def sarsa(matrix, rewards, actions, alpha=0.1, gamma=0.9, epsilon=0.1, episodes=1000):
     q_table = np.zeros((*matrix.shape, len(actions))) #creamos la q_table
-
     for episode in range(episodes):#iteramos por el rango de episodios
         #posicionar al robot (S)
         state = posicionar_robot()
@@ -315,7 +314,7 @@ while True:
                 print("Ejecutando Q-Learning...")
                 q_table = q_learning(matrix, rewards, actions)
                 print("Q-Table (Q-Learning):")
-                print(np.around(q_table, decimals=2))
+                print(np.around(np.transpose(q_table, (2, 0, 1)), decimals=2))
                 q_policy = extract_policy_from_q_table(q_table, actions)
                 print("\nQ-Learning Policy:")
                 print(q_policy)
@@ -324,7 +323,7 @@ while True:
                 print("Ejecutando SARSA...")
                 sarsa_table = sarsa(matrix, rewards, actions)
                 print("\nQ-Table (SARSA):")
-                print(np.around(sarsa_table, decimals=2))
+                print(np.around(np.transpose(sarsa_table, (2, 0, 1)), decimals=2))
                 sarsa_policy = extract_policy_from_q_table(sarsa_table, actions)
                 print("\nSARSA Policy:")
                 print(sarsa_policy)

@@ -291,10 +291,10 @@ pygame.time.wait(2000)
 
 # Imprimir las tablas finales
 print("Q-Table (Q-Learning):")
-print(np.around(q_table, decimals=2))
+print(np.around(np.transpose(q_table, (2, 0, 1)), decimals=2))
 
 print("\nQ-Table (SARSA):")
-print(np.around(sarsa_table, decimals=2))
+print(np.around(np.transpose(sarsa_table, (2, 0, 1)), decimals=2))
 
 print("\nValue Table (TD(0)):")
 print(np.around(td_value_table, decimals=2))
